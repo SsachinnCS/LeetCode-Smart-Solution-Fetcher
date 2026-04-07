@@ -14,7 +14,7 @@ router.post("/", async (req, res) => {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "llama3-70b-8192", // ✅ FIXED
+        model: "llama-3.2-11b-vision-preview", // ✅ FIXED
         messages: [
           { role: "system", content: "You are a coding assistant." },
           { role: "user", content: `Code:\n${code}\n\nQuestion:\n${question}` }
