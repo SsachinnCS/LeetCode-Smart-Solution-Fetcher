@@ -254,7 +254,7 @@ async function fetchCode() {
   const q = toKebabCase(document.getElementById("questionInput").value);
   const lang = document.getElementById("language").value;
 
-  const res = await fetch(`https://your-backend.onrender.com/api/problem/${q}?lang=${lang}`);
+  const res = await fetch(`https://leetcode-backend-1vyl.onrender.com/api/problem/${q}?lang=${lang}`);
   const data = await res.json();
 
   currentCode = data.code;
@@ -268,7 +268,7 @@ async function login() {
   const email = prompt("Email:");
   const password = prompt("Password:");
 
-  const res = await fetch("https://your-backend.onrender.com/api/auth/login", {
+  const res = await fetch("https://leetcode-backend-1vyl.onrender.com/api/auth/login", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ email, password })
@@ -287,7 +287,7 @@ async function signup() {
   const email = prompt("Email:");
   const password = prompt("Password:");
 
-  await fetch("https://your-backend.onrender.com/api/auth/signup", {
+  await fetch("https://leetcode-backend-1vyl.onrender.com/api/auth/signup", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ email, password })
@@ -303,7 +303,7 @@ async function saveProblem() {
 
   if (!userId) return alert("Login first");
 
-  await fetch("https://your-backend.onrender.com/api/save", {
+  await fetch("https://leetcode-backend-1vyl.onrender.com/api/save", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ userId, problem })
@@ -351,7 +351,7 @@ async function sendMessage() {
 
   addMessage("Thinking...", "bot");
 
-  const res = await fetch("https://your-backend.onrender.com/api/ai", {
+  const res = await fetch("https://leetcode-backend-1vyl.onrender.com/api/ai", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ question: text, code: currentCode, history: chatHistory })
