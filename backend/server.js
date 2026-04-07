@@ -13,7 +13,11 @@ const aiRoutes = require("./routes/ai");
 
 const app = express();
 
-app.use(cors());
+//const cors = require("cors");
+
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
 
 // MongoDB
