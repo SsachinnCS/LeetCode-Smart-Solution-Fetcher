@@ -342,25 +342,48 @@ function addMessage(text, type) {
 /* AI */
 async function sendMessage() {
   const input = document.getElementById("chatInput");
-  const text = input.value;
+  const text = input.value.trim();
 
   if (!text || !currentCode) return;
 
   addMessage(text, "user");
   input.value = "";
 
+  // Show loading message
   addMessage("Thinking...", "bot");
 
-  const res = await fetch("https://leetcode-backend-1vyl.onrender.com/api/ai", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ question: text, code: currentCode, history: chatHistory })
-  });
+  try {
+    const res = await fetch("https://leetcode-backend-1vyl.onrender.com/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: text,
+        code: currentCode
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  document.querySelector(".bot:last-child").remove();
-  addMessage(data.answer || "Error", "bot");
+    console.log("AI Response:", data); // 🔥 DEBUG
+
+    // Remove "Thinking..."
+    document.querySelector(".bot:last-child")?.remove();
+
+    // Handle all cases properly
+    if (data.answer) {
+      addMessage(data.answer, "bot");
+    } else if (data.error) {
+      addMessage("⚠️ " + data.error, "bot");
+    } else {
+      addMessage("⚠️ No response from AI", "bot");
+    }
+
+  } catch (err) {
+    console.error(err);
+
+    document.querySelector(".bot:last-child")?.remove();
+    addMessage("⚠️ Server error", "bot");
+  }
 }
 </script>
 
