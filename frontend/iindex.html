@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LeetCode Solutin Fetcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: white;
+  transition: 0.3s;
+}
+
+.container {
+  background: rgba(30,30,30,0.9);
+  padding: 25px;
+  border-radius: 20px;
+  width: 95%;
+  max-width: 900px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border: none;
+}
+
+button {
+  background: #2575fc;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1a5edb;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.status {
+  text-align: center;
+}
+
+pre {
+  margin-top: 15px;
+  border-radius: 10px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+/* LIGHT MODE */
+.light {
+  background: #f5f5f5;
+  color: black;
+}
+
+.light .container {
+  background: white;
+}
+
+.light pre {
+  background: #eee;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2> LeetCode Solution Fetcher</h2>
+
+<div class="status" id="status">❌ Not Logged In</div>
+
+<input type="text" id="questionInput" placeholder="Enter problem (e.g. Two Sum)" />
+
+<select id="language">
+  <option value="cpp">C++</option>
+  <option value="java">Java</option>
+  <option value="python">Python</option>
+  <option value="javascript">JavaScript</option>
+</select>
+
+<div class="row">
+<button onclick="fetchCode()">🔍 Fetch</button>
+<button onclick="saveProblem()">⭐ Save</button>
+</div>
+
+<div class="row">
+<button onclick="login()">🔐 Login</button>
+<button onclick="signup()">🆕 Signup</button>
+</div>
+
+<button onclick="downloadPDF()">📥 Download PDF</button>
+<button onclick="goDashboard()">📊 Dashboard</button>
+<button onclick="toggleTheme()">🌗 Theme</button>
+
+<!-- Code Output -->
+<pre><code id="codeBlock" class="language-cpp"></code></pre>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+let currentCode = "";
+
+// Format
+function toKebabCase(str) {
+  return str.toLowerCase().replace(/\s+/g, '-');
+}
+
+// Theme
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  const isLight = document.body.classList.contains("light");
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+}
+
+// Load theme + selected problem
+window.onload = () => {
+  const theme = localStorage.getItem("theme");
+  if (theme === "light") {
+    document.body.classList.add("light");
+  }
+
+  const problem = localStorage.getItem("selectedProblem");
+  if (problem) {
+    document.getElementById("questionInput").value = problem;
+    localStorage.removeItem("selectedProblem");
+  }
+
+  updateStatus();
+};
+
+// Login status
+function updateStatus() {
+  const token = localStorage.getItem("token");
+  document.getElementById("status").innerText =
+    token ? "✅ Logged In" : "❌ Not Logged In";
+}
+
+// FETCH
+async function fetchCode() {
+  const questionRaw = document.getElementById("questionInput").value.trim();
+  const language = document.getElementById("language").value;
+
+  if (!questionRaw) return alert("Enter problem");
+
+  const question = toKebabCase(questionRaw);
+
+  try {
+    const res = await fetch(`http://127.0.0.1:3001/api/problem/${question}?lang=${language}`);
+    const data = await res.json();
+
+    if (data.code) {
+      currentCode = data.code;
+
+      const codeBlock = document.getElementById("codeBlock");
+
+      let langClass = "language-cpp";
+      if (language === "java") langClass = "language-java";
+      if (language === "python") langClass = "language-python";
+      if (language === "javascript") langClass = "language-javascript";
+
+      codeBlock.className = langClass;
+      codeBlock.textContent = data.code;
+
+      hljs.highlightElement(codeBlock);
+    } else {
+      alert(data.msg || "Not found");
+    }
+
+  } catch (err) {
+    alert("Failed to fetch");
+  }
+}
+
+// LOGIN
+async function login() {
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  const res = await fetch("http://127.0.0.1:3001/api/auth/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("userId", data.userId);
+    updateStatus();
+    alert("Login successful");
+  }
+}
+
+// SIGNUP
+async function signup() {
+  const email = prompt("Email:");
+  const password = prompt("Password");
+
+  await fetch("http://127.0.0.1:3001/api/auth/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  alert("Signup done");
+}
+
+// SAVE
+async function saveProblem() {
+  const userId = localStorage.getItem("userId");
+  const question = document.getElementById("questionInput").value;
+
+  console.log("Saving:", userId, question); // 👈 DEBUG
+
+  if (!userId) {
+    alert("Login first");
+    return;
+  }
+
+  await fetch("http://127.0.0.1:3001/api/save", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      userId,
+      problem: question
+    })
+  });
+
+  alert("Saved!");
+}
+
+// DASHBOARD
+function goDashboard() {
+  window.location.href = "dashboard.html";
+}
+
+// PDF
+function downloadPDF() {
+  if (!currentCode) return alert("Fetch first");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const lines = doc.splitTextToSize(currentCode, 180);
+  doc.text(lines, 10, 10);
+
+  doc.save("solution.pdf");
+}
+</script>
+
+</body>
+</html>

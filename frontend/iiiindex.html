@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LeetCode Smart Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: white;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  border: none;
+}
+
+button {
+  background: #2575fc;
+  color: white;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+pre {
+  margin-top: 10px;
+  border-radius: 10px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.chat-container {
+  margin-top: 20px;
+  background: rgba(0,0,0,0.6);
+  padding: 10px;
+  border-radius: 15px;
+}
+
+.chat-box {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.message {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.user {
+  background: #2575fc;
+  margin-left: auto;
+}
+
+/* LIGHT MODE */
+.light {
+  background: #f5f5f5;
+  color: black;
+}
+
+.light .container {
+  background: white;
+  color: black;
+}
+
+.light .chat-container {
+  background: #ddd;
+}
+
+.light pre {
+  background: #eee;
+}
+
+.bot {
+  background: #333;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Leetcode Solution Fetcher</h2>
+
+<input id="questionInput" placeholder="Enter problem (e.g. Two Sum)" />
+
+<select id="language">
+  <option value="cpp">C++</option>
+  <option value="java">Java</option>
+  <option value="python">Python</option>
+</select>
+
+<div class="row">
+<button onclick="fetchCode()">Fetch</button>
+<button onclick="saveProblem()">Save</button>
+</div>
+
+<div class="row">
+<button onclick="login()">Login</button>
+<button onclick="signup()">Signup</button>
+</div>
+
+<button onclick="toggleTheme()">🌗 Theme</button>
+
+<button onclick="goDashboard()">Dashboard</button>
+<button onclick="downloadPDF()">📥 Download Code</button>
+
+<pre><code id="codeBlock"></code></pre>
+
+<div class="chat-container">
+  <div id="chatBox" class="chat-box"></div>
+  <input id="chatInput" placeholder="Ask about code..." />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+</div>
+
+<script>
+let currentCode = "";
+let chatHistory = [];
+
+// FORMAT
+function toKebabCase(str) {
+  return str.toLowerCase().replace(/\s+/g, '-');
+}
+
+// FETCH CODE
+async function fetchCode() {
+  const raw = document.getElementById("questionInput").value;
+  const lang = document.getElementById("language").value;
+
+  if (!raw) return alert("Enter problem");
+
+  const q = toKebabCase(raw);
+
+  try {
+    const res = await fetch(`http://127.0.0.1:3001/api/problem/${q}?lang=${lang}`);
+    const data = await res.json();
+
+    if (!data.code) {
+      alert("Not found");
+      return;
+    }
+
+    currentCode = data.code;
+
+    const codeBlock = document.getElementById("codeBlock");
+    codeBlock.textContent = data.code;
+    hljs.highlightElement(codeBlock);
+
+  } catch {
+    alert("Fetch failed");
+  }
+}
+
+// LOGIN
+async function login() {
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  const res = await fetch("http://127.0.0.1:3001/api/auth/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  console.log("LOGIN:", data);
+
+  if (!data.userId) {
+    alert(data.msg || "Login failed");
+    return;
+  }
+
+  localStorage.setItem("userId", data.userId);
+  alert("Login successful");
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+
+  // save preference
+  if (document.body.classList.contains("light")) {
+    localStorage.setItem("theme", "light");
+  } else {
+    localStorage.setItem("theme", "dark");
+  }
+}
+
+// load theme on refresh
+window.onload = () => {
+  const theme = localStorage.getItem("theme");
+
+  if (theme === "light") {
+    document.body.classList.add("light");
+  }
+
+  const saved = localStorage.getItem("selectedProblem");
+  if (saved) {
+    document.getElementById("questionInput").value =
+      saved.replace(/-/g, ' ');
+    localStorage.removeItem("selectedProblem");
+  }
+};
+
+// SIGNUP
+async function signup() {
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  await fetch("http://127.0.0.1:3001/api/auth/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  alert("Signup done");
+}
+
+// SAVE
+async function saveProblem() {
+  const userId = localStorage.getItem("userId");
+  const problem = document.getElementById("questionInput").value;
+
+  if (!userId) return alert("Login first");
+  if (!problem) return alert("Enter problem");
+
+  const res = await fetch("http://127.0.0.1:3001/api/save", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ userId, problem })
+  });
+
+  const data = await res.json();
+  console.log("SAVE:", data);
+
+  alert("Saved!");
+}
+
+// DASHBOARD
+function goDashboard() {
+  window.location.href = "dashboard.html";
+}
+
+// Download pfd
+function downloadPDF() {
+  if (!currentCode) {
+    alert("Fetch code first");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const lines = doc.splitTextToSize(currentCode, 180);
+  doc.text(lines, 10, 10);
+
+  doc.save("solution.pdf");
+}
+
+// CHAT
+function addMessage(text, type) {
+  const box = document.getElementById("chatBox");
+
+  const msg = document.createElement("div");
+  msg.className = "message " + type;
+  msg.innerText = text;
+
+  box.appendChild(msg);
+  box.scrollTop = box.scrollHeight;
+}
+
+// AI CHAT
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value;
+
+  if (!text || !currentCode) return alert("Fetch code first");
+
+  addMessage(text, "user");
+  input.value = "";
+
+  addMessage("Thinking...", "bot");
+
+  try {
+    const res = await fetch("http://127.0.0.1:3001/api/ai", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        question: text,
+        code: currentCode,
+        history: chatHistory
+      })
+    });
+
+    const data = await res.json();
+
+    document.querySelector(".bot:last-child").remove();
+
+    if (!data.answer) {
+      addMessage("⚠️ AI error", "bot");
+      return;
+    }
+
+    addMessage(data.answer, "bot");
+
+    chatHistory.push({ role: "user", content: text });
+    chatHistory.push({ role: "assistant", content: data.answer });
+
+  } catch {
+    addMessage("⚠️ Connection error", "bot");
+  }
+}
+
+// LOAD SAVED PROBLEM
+window.onload = () => {
+  const saved = localStorage.getItem("selectedProblem");
+  if (saved) {
+    document.getElementById("questionInput").value = saved;
+    localStorage.removeItem("selectedProblem");
+  }
+};
+</script>
+
+</body>
+</html>

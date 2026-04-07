@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LeetCode Solution Fetcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI';
+  background: linear-gradient(135deg, #4f46e5, #3b82f6);
+  display: flex;
+  height: 100vh;
+  color: white;
+  transition: 0.3s;
+}
+
+/* MENU BUTTON */
+.menu-btn {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
+  background: black;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(20px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: 0.3s;
+}
+
+.sidebar h3 {
+  text-align: center;
+}
+
+.sidebar button {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid black;
+  color: white;
+  cursor: pointer;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+/* GLASS */
+.glass {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+/* INPUT */
+input, select {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: none;
+}
+
+/* BUTTON */
+button {
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: 1px solid black;
+  color: white;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* ROW */
+.row {
+  display: flex;
+  gap: 15px;
+}
+
+.row button {
+  flex: 1;
+  height: 60px;
+  margin: 0;
+}
+
+/* CODE */
+pre {
+  background: #020617;
+  padding: 15px;
+  border-radius: 12px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+/* CHAT */
+.chat-box {
+  margin-top: 20px;
+}
+
+.message {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  max-width: 70%;
+}
+
+.user { background: #3b82f6; margin-left: auto; }
+.bot { background: #111827; }
+
+/* MOBILE */
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+
+  .menu-btn { display: block; }
+
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    height: 100%;
+    z-index: 999;
+  }
+
+  .sidebar.active { left: 0; }
+
+  .row { flex-direction: column; }
+}
+
+/* LIGHT MODE */
+.light {
+  background: #f5f7fb !important;
+  color: black !important;
+}
+
+.light .glass { background: white; color: black; }
+.light .sidebar { background: #ffffffcc; color: black; }
+.light input, .light select { background: #eee; color: black; }
+.light button { background: #ddd; color: black; border: 1px solid #aaa; }
+.light pre { background: #f3f4f6; color: black; }
+.light .bot { background: #ddd; color: black; }
+</style>
+</head>
+
+<body>
+
+<button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+<div class="sidebar">
+  <h3>Smart Hub</h3>
+  <button onclick="goDashboard()">Dashboard</button>
+  <button onclick="toggleTheme()">Theme</button>
+  <button onclick="downloadPDF()">Download</button>
+</div>
+
+<div class="main">
+<div class="glass">
+
+<h2>LeetCode Solution Fetcher</h2>
+
+<input id="questionInput" placeholder="Enter problem" />
+
+<select id="language">
+  <option value="cpp">C++</option>
+  <option value="java">Java</option>
+  <option value="python">Python</option>
+</select>
+
+<div class="row">
+<button onclick="fetchCode()">Fetch</button>
+<button onclick="saveProblem()">Save</button>
+</div>
+
+<div class="row">
+<button onclick="login()">Login</button>
+<button onclick="signup()">Signup</button>
+</div>
+
+<pre><code id="codeBlock"></code></pre>
+
+<div id="chatBox" class="chat-box"></div>
+
+<input id="chatInput" placeholder="Ask about code..." />
+<button onclick="sendMessage()">Send</button>
+
+</div>
+</div>
+
+<script>
+let currentCode = "";
+let chatHistory = [];
+
+/* SIDEBAR */
+function toggleSidebar() {
+  document.querySelector(".sidebar").classList.toggle("active");
+}
+
+/* THEME */
+function toggleTheme() {
+  document.body.classList.toggle("light");
+
+  if (document.body.classList.contains("light")) {
+    localStorage.setItem("theme", "light");
+  } else {
+    localStorage.setItem("theme", "dark");
+  }
+}
+
+/* LOAD THEME */
+window.onload = () => {
+  const theme = localStorage.getItem("theme");
+  if (theme === "light") {
+    document.body.classList.add("light");
+  }
+};
+
+/* FORMAT */
+function toKebabCase(str) {
+  return str.toLowerCase().replace(/\s+/g, '-');
+}
+
+/* FETCH */
+async function fetchCode() {
+  const q = toKebabCase(document.getElementById("questionInput").value);
+  const lang = document.getElementById("language").value;
+
+  const res = await fetch(`http://127.0.0.1:3001/api/problem/${q}?lang=${lang}`);
+  const data = await res.json();
+
+  currentCode = data.code;
+  const block = document.getElementById("codeBlock");
+  block.textContent = data.code || "Not found";
+  hljs.highlightElement(block);
+}
+
+/* LOGIN */
+async function login() {
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  const res = await fetch("http://127.0.0.1:3001/api/auth/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (!data.userId) return alert("Login failed");
+
+  localStorage.setItem("userId", data.userId);
+  alert("Login success");
+}
+
+/* SIGNUP */
+async function signup() {
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  await fetch("http://127.0.0.1:3001/api/auth/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  alert("Signup done");
+}
+
+/* SAVE */
+async function saveProblem() {
+  const userId = localStorage.getItem("userId");
+  const problem = toKebabCase(document.getElementById("questionInput").value);
+
+  if (!userId) return alert("Login first");
+
+  await fetch("http://127.0.0.1:3001/api/save", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ userId, problem })
+  });
+
+  alert("Saved!");
+}
+
+/* DASHBOARD */
+function goDashboard() {
+  window.location.href = "dashboard.html";
+}
+
+/* PDF */
+function downloadPDF() {
+  if (!currentCode) return alert("Fetch first");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const lines = doc.splitTextToSize(currentCode, 180);
+  doc.text(lines, 10, 10);
+
+  doc.save("solution.pdf");
+}
+
+/* CHAT */
+function addMessage(text, type) {
+  const box = document.getElementById("chatBox");
+  const msg = document.createElement("div");
+  msg.className = "message " + type;
+  msg.innerText = text;
+  box.appendChild(msg);
+}
+
+/* AI */
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value;
+
+  if (!text || !currentCode) return;
+
+  addMessage(text, "user");
+  input.value = "";
+
+  addMessage("Thinking...", "bot");
+
+  const res = await fetch("http://127.0.0.1:3001/api/ai", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ question: text, code: currentCode, history: chatHistory })
+  });
+
+  const data = await res.json();
+
+  document.querySelector(".bot:last-child").remove();
+  addMessage(data.answer || "Error", "bot");
+}
+</script>
+
+</body>
+</html>
