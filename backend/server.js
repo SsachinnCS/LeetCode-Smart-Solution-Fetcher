@@ -1,6 +1,6 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 
-console.log("ENV TEST:", process.env.GROQ_API_KEY);
+
 
 const express = require("express");
 const mongoose = require("mongoose");
