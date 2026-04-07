@@ -7,6 +7,8 @@ router.post("/", async (req, res) => {
   try {
     const { question, code } = req.body;
 
+    console.log("AI Request:", question);
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -16,19 +18,28 @@ router.post("/", async (req, res) => {
       body: JSON.stringify({
         model: "llama3-8b-8192",
         messages: [
-          { role: "system", content: "You are a coding assistant." },
-          { role: "user", content: `Code:\n${code}\n\nQuestion:\n${question}` }
+          {
+            role: "system",
+            content: "You are a helpful coding assistant."
+          },
+          {
+            role: "user",
+            content: `Here is code:\n${code}\n\nQuestion: ${question}`
+          }
         ]
       })
     });
 
     const data = await response.json();
 
-    res.json({
-      answer: data.choices?.[0]?.message?.content || "No response"
-    });
+    console.log("AI Response:", data);
+
+    const answer = data.choices?.[0]?.message?.content;
+
+    res.json({ answer: answer || "No response from AI" });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "AI failed" });
   }
 });
