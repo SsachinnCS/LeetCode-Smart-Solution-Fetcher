@@ -1,6 +1,4 @@
-require('dotenv').config({ path: __dirname + '/.env' });
-
-
+require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -13,11 +11,10 @@ const aiRoutes = require("./routes/ai");
 
 const app = express();
 
-//const cors = require("cors");
+// CORS
+app.use(cors({ origin: "*" }));
 
-app.use(cors({
-  origin: "*"
-}));
+// Middleware
 app.use(express.json());
 
 // MongoDB
@@ -31,7 +28,22 @@ app.use("/api/problem", problemRoutes);
 app.use("/api/save", saveRoutes);
 app.use("/api/ai", aiRoutes);
 
-app.listen(3001, () => console.log("Server running on port 3001"));
+// Root
+app.get("/", (req, res) => {
+  res.send("🚀 Backend is LIVE");
+});
+
+// Test
+app.get("/test", (req, res) => {
+  res.send("Server working ✅");
+});
+
+// PORT FIX (IMPORTANT)
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 // const express = require("express");
 // const mongoose = require("mongoose");
 // const cors = require("cors");

@@ -1,35 +1,34 @@
 const express = require("express");
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const router = express.Router();
 
 router.get("/:name", async (req, res) => {
   try {
-    const name = req.params.name.toLowerCase();
+    const name = req.params.name.toLowerCase().replace(/\s+/g, "-");
     const lang = req.query.lang || "cpp";
 
-    const map = {
-      cpp: { folder: "C++", ext: "cpp" },
-      java: { folder: "Java", ext: "java" },
-      python: { folder: "Python", ext: "py" }
-    };
+    let ext = "cpp";
+    let folder = "C++";
 
-    const { folder, ext } = map[lang] || map["cpp"];
+    if (lang === "java") { ext = "java"; folder = "Java"; }
+    if (lang === "python") { ext = "py"; folder = "Python"; }
 
     const url = `https://raw.githubusercontent.com/kamyu104/LeetCode-Solutions/master/${folder}/${name}.${ext}`;
 
     const response = await fetch(url);
 
-    if (!response.ok) {
-      return res.json({ msg: "Not found" });
-    }
+    if (!response.ok)
+      return res.status(404).json({ msg: "Not found" });
 
-    const data = await response.text();
+    const code = await response.text();
 
-    res.json({ code: data });
+    res.json({ code });
 
-  } catch (err) {
-    res.status(500).json({ msg: "Server error" });
+  } catch {
+    res.status(500).json({ error: "Fetch error" });
   }
 });
 
