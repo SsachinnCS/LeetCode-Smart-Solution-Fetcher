@@ -14,10 +14,16 @@ router.post("/", async (req, res) => {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "llama-3.2-11b-vision-preview", // ✅ FIXED
+        model: "mixtral-8x7b-32768", // ✅ WORKING MODEL
         messages: [
-          { role: "system", content: "You are a coding assistant." },
-          { role: "user", content: `Code:\n${code}\n\nQuestion:\n${question}` }
+          {
+            role: "system",
+            content: "You are a helpful coding assistant."
+          },
+          {
+            role: "user",
+            content: `Here is code:\n${code}\n\nQuestion:\n${question}`
+          }
         ]
       })
     });
@@ -26,8 +32,10 @@ router.post("/", async (req, res) => {
 
     console.log("AI Response:", data);
 
+    const answer = data?.choices?.[0]?.message?.content;
+
     res.json({
-      answer: data.choices?.[0]?.message?.content || "No response from AI"
+      answer: answer || "No response from AI"
     });
 
   } catch (err) {
