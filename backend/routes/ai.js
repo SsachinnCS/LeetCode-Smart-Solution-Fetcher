@@ -7,16 +7,16 @@ router.post("/", async (req, res) => {
   try {
     const { question, code } = req.body;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json"
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost", // required
+        "X-Title": "LeetCode Smart Hub"
       },
       body: JSON.stringify({
-        model: "llama3-8b-8192", // ✅ fallback stable
-        temperature: 0.7,
-        max_tokens: 1024,
+        model: "meta-llama/llama-3-8b-instruct", // ✅ stable model
         messages: [
           {
             role: "system",
@@ -32,13 +32,7 @@ router.post("/", async (req, res) => {
 
     const data = await response.json();
 
-    console.log("AI Response FULL:", JSON.stringify(data, null, 2));
-
-    if (data.error) {
-      return res.json({
-        answer: "⚠️ AI model issue. Please try again later."
-      });
-    }
+    console.log("OpenRouter Response:", data);
 
     const answer = data?.choices?.[0]?.message?.content;
 
