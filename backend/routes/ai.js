@@ -14,16 +14,10 @@ router.post("/", async (req, res) => {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-       model: "gemma-7b-it", // ✅ WORKING MODEL
+        model: "llama-3.3-70b-versatile", // ✅ FINAL WORKING MODEL
         messages: [
-          {
-            role: "system",
-            content: "You are a helpful coding assistant."
-          },
-          {
-            role: "user",
-            content: `Here is code:\n${code}\n\nQuestion:\n${question}`
-          }
+          { role: "system", content: "You are a helpful coding assistant." },
+          { role: "user", content: `Code:\n${code}\n\nQuestion:\n${question}` }
         ]
       })
     });
