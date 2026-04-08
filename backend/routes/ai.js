@@ -14,7 +14,7 @@ router.post("/", async (req, res) => {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "mixtral-8x7b-32768", // ✅ WORKING MODEL
+       model: "gemma-7b-it", // ✅ WORKING MODEL
         messages: [
           {
             role: "system",
