@@ -138,6 +138,42 @@ pre {
 .user { background: #3b82f6; margin-left: auto; }
 .bot { background: #111827; }
 
+
+/* 🔥 FOOTER */
+.footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+/* LINK */
+.sachin {
+  color: #ffd700;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 5px;
+
+  animation: jump 1.2s ease-in-out infinite;
+  transition: 0.3s;
+}
+
+/* HOVER */
+.sachin:hover {
+  color: #00eaff;
+  transform: scale(1.2);
+}
+
+/* JUMP ANIMATION */
+@keyframes jump {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(-8px); }
+  50%  { transform: translateY(0); }
+  75%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
   body { flex-direction: column; }
@@ -169,6 +205,8 @@ pre {
 .light button { background: #ddd; color: black; border: 1px solid #aaa; }
 .light pre { background: #f3f4f6; color: black; }
 .light .bot { background: #ddd; color: black; }
+
+
 </style>
 </head>
 
@@ -214,6 +252,15 @@ pre {
 <button onclick="sendMessage()">Send</button>
 
 </div>
+</div>
+
+
+<!-- 🔥 FOOTER -->
+<div class="footer">
+  Made with ❤️ by 
+  <a href="https://www.linkedin.com/in/sachin-kumar-048975288/" target="_blank" class="sachin">
+    Sachin
+  </a>
 </div>
 
 <script>
