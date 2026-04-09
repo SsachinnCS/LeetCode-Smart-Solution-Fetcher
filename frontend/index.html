@@ -207,6 +207,59 @@ pre {
 .light .bot { background: #ddd; color: black; }
 
 
+/* PAGE LAYOUT FIX */
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* WRAPPER FOR MAIN CONTENT */
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* PUSH FOOTER DOWN */
+.content {
+  flex: 1;
+}
+
+/* 🔥 FOOTER */
+.footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+/* LINK */
+.sachin {
+  color: #ffd700;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 5px;
+
+  animation: jump 1.2s ease-in-out infinite;
+  transition: 0.3s;
+}
+
+/* HOVER */
+.sachin:hover {
+  color: #00eaff;
+  transform: scale(1.2);
+}
+
+/* JUMP */
+@keyframes jump {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(-8px); }
+  50%  { transform: translateY(0); }
+  75%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
 </style>
 </head>
 
@@ -221,6 +274,8 @@ pre {
   <button onclick="downloadPDF()">Download</button>
 </div>
 
+<div class="page">
+<div class="content">
 <div class="main">
 <div class="glass">
 
@@ -253,6 +308,7 @@ pre {
 
 </div>
 </div>
+</div>
 
 
 <!-- 🔥 FOOTER -->
@@ -261,6 +317,7 @@ pre {
   <a href="https://www.linkedin.com/in/sachin-kumar-048975288/" target="_blank" class="sachin">
     Sachin
   </a>
+</div>
 </div>
 
 <script>
