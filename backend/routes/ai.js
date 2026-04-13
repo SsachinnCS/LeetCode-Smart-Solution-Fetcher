@@ -7,11 +7,11 @@ router.post("/", async (req, res) => {
   try {
     const { question, code } = req.body;
 
-const prompt = `
-You are an expert DSA tutor.
+    const prompt = `
+You are a DSA expert.
 
-Explain this code step by step.
-Give intuition + time complexity.
+Explain this code clearly.
+Also give time and space complexity.
 
 Code:
 ${code}
@@ -21,7 +21,7 @@ ${question}
 `;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -30,6 +30,7 @@ ${question}
         body: JSON.stringify({
           contents: [
             {
+              role: "user",
               parts: [{ text: prompt }]
             }
           ]
@@ -39,18 +40,24 @@ ${question}
 
     const data = await response.json();
 
-    console.log("Gemini Response:", data);
+    console.log("FULL GEMINI RESPONSE:", JSON.stringify(data, null, 2));
 
-    const answer =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    // ✅ SAFE PARSING
+    let answer = "No response from Gemini";
 
-    res.json({
-      answer: answer || "No response from Gemini"
-    });
+    if (data.candidates && data.candidates.length > 0) {
+      const parts = data.candidates[0].content.parts;
+
+      if (parts && parts.length > 0) {
+        answer = parts.map(p => p.text).join("");
+      }
+    }
+
+    res.json({ answer });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "AI failed" });
+    res.status(500).json({ error: "Gemini failed" });
   }
 });
 
