@@ -8,9 +8,9 @@ router.post("/", async (req, res) => {
     const { question, code } = req.body;
 
     const prompt = `
-You are a DSA expert.
+You are an expert DSA tutor.
 
-Explain this code clearly.
+Explain this code step by step.
 Also give time and space complexity.
 
 Code:
@@ -21,7 +21,7 @@ ${question}
 `;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -30,7 +30,6 @@ ${question}
         body: JSON.stringify({
           contents: [
             {
-              role: "user",
               parts: [{ text: prompt }]
             }
           ]
@@ -40,17 +39,13 @@ ${question}
 
     const data = await response.json();
 
-    console.log("FULL GEMINI RESPONSE:", JSON.stringify(data, null, 2));
+    console.log("Gemini FULL:", JSON.stringify(data, null, 2));
 
-    // ✅ SAFE PARSING
     let answer = "No response from Gemini";
 
-    if (data.candidates && data.candidates.length > 0) {
+    if (data.candidates?.length) {
       const parts = data.candidates[0].content.parts;
-
-      if (parts && parts.length > 0) {
-        answer = parts.map(p => p.text).join("");
-      }
+      answer = parts.map(p => p.text).join("");
     }
 
     res.json({ answer });
